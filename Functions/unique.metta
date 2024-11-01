@@ -1,0 +1,40 @@
+(= (my-unique $acc $expr)
+    (if (== $expr ())
+        $acc
+        (let* (
+            ($head (car-atom $expr))
+            ($tail (cdr-atom $expr))
+            )
+            (if (check-atom $head $acc)
+                (my-unique $acc $tail)
+                (let $unique-expr (cons-atom $head $acc)
+                    (my-unique $unique-expr $tail)
+                )
+            )
+        )
+    )
+)
+; helper function to check the presence of an atom in an expression
+(= (check-atom $atom $expr)
+    (if (== $expr ())
+        False
+        (let* 
+            (
+                ($head (car-atom $expr))
+                ($tail (cdr-atom $expr))
+            )
+            (if (== $atom $head)
+                True
+                (check-atom $atom $tail)
+            )
+        )
+    )
+)
+; The output are reversed but that is not an issue
+
+! (check-atom 3 (1 2 4 (3))); [False]
+! (check-atom 0 (1 0)); [True]
+! (my-unique () ()); [()]
+! (my-unique () (1 2 3)); [(3 2 1)]
+! (my-unique () (1 2 3 3 5 1)); [(5 3 2 1)]
+! (my-unique () (1 2 3 (3 5) 1)); [((3 5) 3 2 1)]
