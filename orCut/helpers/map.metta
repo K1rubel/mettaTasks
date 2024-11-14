@@ -1,0 +1,13 @@
+(= (map $func $expr)
+    (if (== $expr ())
+        ()
+        (let* (
+            ($head (car-atom $expr))
+            ($tail (cdr-atom $expr))
+            ($new-head ($func $head))
+            ($new-tail (map $func $tail))
+            )
+            (cons-atom $new-head $new-tail)
+        )
+    )   
+)
