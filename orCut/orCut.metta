@@ -1,13 +1,16 @@
 ! (register-module! ./helpers)
 ! (import! &self helpers:map)
 ! (import! &self helpers:size-atom)
+! (import! &self helpers:check-ex)
+! (import! &self helpers:isLiteral)
 
 
 (= (orCut $expr)
-    ; check for an OR in the expression
-    (let* (
-        ($head (car-atom $expr))
-        ($tail (cdr-atom $expr))
+    (if (isLiteral $expr)
+        $expr
+        (let* (
+            ($head (car-atom $expr))
+            ($tail (cdr-atom $expr))
         )
         (if (== $head OR)
             ; check number of children of this OR
@@ -17,38 +20,35 @@
                     ; replace the OR with its childs guardset
                     ; the child could be a literal or another tree
                     ; get the child and see which one it is
-                    (let* (
-                        ($child (car-atom $tail))
-                        ($t (get-metatype $child))
-                        )
-                        (if (== $t Symbol)
+                    (let 
+                        $child (validateExpr $tail)
+                        
+                        (if (== (size-atom $child) 1)
                             ; add to the parent the guard sets of OR's child which in this case is just the literal itself
-                            $tail
-                            ;if $child is an expression
-                            (let $boolFunc (car-atom $child)
-                                ;check if the $child is a literal with NOT or AND/OR
-                                ; if it is NOT just use this in place of the expression
-                                (if (== $boolFunc NOT)
-                                    $child
-                                    ; if anything else append subsequent children of the child node to the parent expression
-                                    (cdr-atom $child)
-                                )
-                            )
-
+                            $child
+                            (cdr-atom $child)
                         )
                     )
-                    ;no reduction
-                    $expr
+                    ;apply orCut to innner expressions
+                    (let $reducted (map orCut $tail)
+                        (cons-atom $head $reducted)
+                    )
                 )
             )
             (if (== (size-atom $tail) 1)
-                $expr
+                (let* (
+                    ($properTail (validateExpr $tail))
+                    ($inner (orCut $properTail))
+                    )
+                    (cons-atom $head $inner)
+                )
                 ;check for OR nodes in the rest of the expression
                 (let $inner-expr (map orCut $tail)
                     (cons-atom $head $inner-expr)
                 )
             )
         )
+    )
     )
 )
 
@@ -59,3 +59,4 @@
 ! (orCut (OR (AND B C (AND C F)))); (B C (AND C F)) "grand child of the POA"
 ! (orCut (AND (OR (NOT A)))); (AND (NOT A))
 ! (orCut (AND (OR (NOT A)) (AND A))); (AND (NOT A) (AND A))
+! (orCut (AND B (OR (AND A (OR B)) (AND B (OR A)))))
