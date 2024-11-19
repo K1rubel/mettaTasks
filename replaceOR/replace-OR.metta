@@ -1,39 +1,46 @@
-; in an expression like this (AND A B (OR ...)) the OR will be the last element 
-; or is this assumption wrong?
-; get the last index atom and get the children and replace it with its own child
+; metta 0.2.0
+; finds an OR expression and applies the orCut transformation
 
 ! (register-module! ./helpers)
 
-! (import! &self helpers:index-atom)
-! (import! &self helpers:size-atom)
+! (import! &self helpers:append)
+! (import! &self helpers:isLiteral)
 
-(= (replace-OR $expr)
-    (let* (
-        ($index (- (size-atom $expr) 1))
-        ($oRex (index-atom $expr $index))
-        )
+(= (reduceOR $acc $expr)
+    (if (== $expr ())
+        $acc
         (let* (
-                ($oRchild (cdr-atom $oRex))
-                ($num (size-atom $oRchild))
+            ($head (car-atom $expr))
+            ($tail (cdr-atom $expr))
             )
-            (if (== $num 1)
-                (let 
-                    $diff (collapse 
-                        (let $super (superpose $expr)
-                        ; find the difference -- this removes the OR expression
-                        (subtraction $super (superpose ($oRex)))
-                        ))
-                        ; union of the OR-less orginal expression and OR-children
-                        (collapse (union (superpose $diff) (superpose $oRchild)))
+            (case (isLiteral $head)
+                (
+                    (False 
+                        (unify (OR $x) $head 
+                            (let $carry (append $x $acc)
+                                    (reduceOR $carry $tail)
+                            )
+                            (let $carry (append ($head) $acc)
+                                    (reduceOR $carry $tail)
+                            )
+                        )
+                    )
+                    (True
+                        (let $carry (append $head $acc)
+                            (reduceOR $carry $tail)
+                        )
+                    )
                 )
-                $expr
             )
         )
-    )
+    )  
 )
-
-! (replace-OR (OR a b c (OR d f)))
-! (replace-OR (AND a b c (OR d f)))
-! (replace-OR (AND a b c (OR d f)))
-! (replace-OR (AND a b c (OR d)))
-! (replace-OR (AND a (OR B)))
+; test cases
+! (reduceOR () (AND A B)) ; (AND A B)
+! (reduceOR () (AND (OR B))) ; (AND B) 
+! (reduceOR () (AND (OR B A))) ; (AND (OR B A)) 
+! (reduceOR () (AND A (NOT C) B)) ; (AND A (NOT C) B)
+! (reduceOR () (AND A (NOT C) (OR B) B)) ; (AND A (NOT C) B B)
+! (reduceOR () (AND A (NOT C) (OR B A) (OR B) B)) ; (AND A (NOT C) (OR B A) B B)
+! (reduceOR () (AND A (NOT C) (OR B) (OR B A)  B)) ; (AND A (NOT C) (OR B A) B B)
+! (reduceOR () (AND A (NOT C) (AND F) (OR B A) (OR B) B)) ; (AND A (NOT C) (AND F) (OR B A) B B)
