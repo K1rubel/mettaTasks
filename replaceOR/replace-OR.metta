@@ -42,5 +42,5 @@
 ! (reduceOR () (AND A (NOT C) B)) ; (AND A (NOT C) B)
 ! (reduceOR () (AND A (NOT C) (OR B) B)) ; (AND A (NOT C) B B)
 ! (reduceOR () (AND A (NOT C) (OR B A) (OR B) B)) ; (AND A (NOT C) (OR B A) B B)
-! (reduceOR () (AND A (NOT C) (OR B) (OR B A)  B)) ; (AND A (NOT C) (OR B A) B B)
+! (reduceOR () (AND A (NOT C) (OR B) (OR B A)  B)) ; (AND A (NOT C) B (OR B A) B)
 ! (reduceOR () (AND A (NOT C) (AND F) (OR B A) (OR B) B)) ; (AND A (NOT C) (AND F) (OR B A) B B)
