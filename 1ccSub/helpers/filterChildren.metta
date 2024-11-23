@@ -1,0 +1,8 @@
+(= (filterChildren $exp)
+        (if (== (get-metatype $exp) Symbol)
+            (empty)
+            (if (== (car-atom $exp) NOT)
+                (empty)
+                $exp)
+        )
+)
