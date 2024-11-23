@@ -106,6 +106,7 @@
 ;!(oneCcSub (AND B C) (AND B (AND B C) (AND (NOT B) D))) ; (AND B (AND C) (AND (NOT B) D))
 ;!(oneCcSub (AND B C) (AND B (OR (AND D) (AND B C)) (AND (NOT B) D))) ; (AND B (OR (AND D) (AND C)) (AND (NOT B) D))
 ;!(oneCcSub (AND B C) (AND (AND B (OR (AND D) (AND B C))) (AND (NOT B) D))) ; (AND (AND B (OR (AND D) (AND C))) (AND (NOT B) D))
+
 ;; this is the one on the Holman Book
 
 ! (oneCcSub (AND B C) (AND A (OR (AND (NOT B)) (AND B (OR (AND D) (AND B C)))))) ; (AND A (OR (AND (NOT B)) (AND B (OR (AND D) (AND C)))))
