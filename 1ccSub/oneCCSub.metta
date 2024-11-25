@@ -19,12 +19,7 @@
                 (if (== $el D)
                     (superpose ())
                     (deeperAndDeeper $el)
-                )
-            )
-        
-        )
-    )
-)
+                )))))
 ;; finds D and deletes it no matter where it is
 ;! (deeperAndDeeper (AND B (AND (NOT B) (NOT C) D)))
 
@@ -52,11 +47,7 @@
                         )
                     )
                     (checkForTerminalAnd $poaGuard $tail)
-                )
-            )
-        )
-    )
-)
+                )))))
 ;; the main constraint complement subtraction function
 ;; two parameteres - the point of application and the whole expression
 
@@ -79,34 +70,54 @@
                     (if (== (getChildren $x) ())
                         $x
                         (oneCcSub $poa $x)
-                    )
-                )
-                )
-            )
+                    ))))))))
+
+;; the function below assumes a terminal AND has already been found and the guardset of this node is given as an input
+;; It finds the common elements between inverted COM set and the guardset of the POA and removes those elements from the POA's children list
+        
+(= (partCcSub $comSet $poa $subExpr)
+    (let* 
+        (
+            ($poaGuardSet (getGuardSet $poa))
+            ($invertedCom (invertLiterals $comSet))
+            ($commonElements (collapse (intersection (superpose $poaGuardSet) (superpose $invertedCom))))
         )
-    ))
-)
-;; once called this makes sure that the poa is updated as long as there is a poa in the expression irrespective of tree depth
+        (updatePoa $commonElements $poa $subExpr)))
+
+;; a function to check equality of two expressions
+;; needed to make sure child ordering doesn't affect equality
+
+(= (expressionEquality $a $b)
+    (let $diff (collapse (subtraction (superpose $a) (superpose $b)))
+        (if (== $diff ())
+            True
+            False
+        )))
+
+;; once called updatePoa finds the poa and updates the children list (remove the common element(s))
+
 (= (updatePoa $common $poa $expr)
     (collapse (let $el (superpose $expr)
-        (if (== $el $poa)
+        (if (expressionEquality $el $poa)
             (collapse (subtraction (superpose $poa) (superpose $common)))
-            (if (== (get-metatype $el) Symbol)
+            (if (or (== (get-metatype $el) Symbol) (isLiteral $el))
                 $el
                 (if (== (getChildren $el) ())
                     $el
                     (updatePoa $common $poa $el)
-                )
-                
-            )
-        )
-    )
-    )
-)
+                ))))))
+
+;; tests for original oneCcSub function
 ;!(oneCcSub (AND B C) (AND B (AND B C) (AND (NOT B) D))) ; (AND B (AND C) (AND (NOT B) D))
 ;!(oneCcSub (AND B C) (AND B (OR (AND D) (AND B C)) (AND (NOT B) D))) ; (AND B (OR (AND D) (AND C)) (AND (NOT B) D))
 ;!(oneCcSub (AND B C) (AND (AND B (OR (AND D) (AND B C))) (AND (NOT B) D))) ; (AND (AND B (OR (AND D) (AND C))) (AND (NOT B) D))
 
 ;; this is the one on the Holman Book
 
-! (oneCcSub (AND B C) (AND A (OR (AND (NOT B)) (AND B (OR (AND D) (AND B C)))))) ; (AND A (OR (AND (NOT B)) (AND B (OR (AND D) (AND C)))))
+;! (oneCcSub (AND B C) (AND A (OR (AND (NOT B)) (AND B (OR (AND D) (AND B C)))))) ; (AND A (OR (AND (NOT B)) (AND B (OR (AND D) (AND C)))))
+
+;; tests for the new partCcSub function
+
+;! (partCcSub (A B (NOT C)) (AND C D) (OR (AND (OR (AND A B))(AND C D)))) ; (OR (AND (OR (AND A B)) (AND D)))
+;! (partCcSub ((NOT B) C) (AND B C) (AND B (OR (AND D) (AND B C)))) ;(AND B (OR (AND D) (AND C)))
+;! (partCcSub ((NOT B) C) (AND B C) (OR (AND D) (AND B C))) ;(OR (AND D) (AND C))
