@@ -5,7 +5,7 @@
 ;; calls the function again with the new accumulator now ($head) and the new tail with all the head instances removed from it
 ;; terminates when (cdr-atom $tailWithoutHead) == ()
 
-(= (unikue $acc $expr)
+(= (unyque $acc $expr)
     (if (== $expr ())
         $acc
         (let* (
@@ -23,11 +23,15 @@
                                     $x
                                 )
             ))
-                (unikue $carry $tailWithoutHead)
+                (unyque $carry $tailWithoutHead)
             )))))
+
+(= (unikue $expr)
+    (unyque () $expr)
+)
 ;; test cases
 
-! (unikue () (A B A B C A)) ; (A B C)
-! (unikue () (A B A C A)) ; (A B C)
-! (unikue () (A A (NOT B) B A C A)) ; (A (NOT B) B C)
-! (unikue () (A D C A (NOT B) B A C A)) ; (A D C (NOT B) B)
+! (unikue (A B A B C A)) ; (A B C)
+! (unikue (A B A C A)) ; (A B C)
+! (unikue (A A (NOT B) B A C A)) ; (A (NOT B) B C)
+! (unikue (A D C A (NOT B) B A C A)) ; (A D C (NOT B) B)
