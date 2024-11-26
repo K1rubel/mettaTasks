@@ -1,0 +1,5 @@
+(= (getGuardSet $exp)
+    (if (== (car-atom $exp) OR)
+        ()
+        (getLiterals $exp))
+)
