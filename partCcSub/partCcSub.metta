@@ -4,12 +4,32 @@
 ! (import! &self helpers:getGuardSet)
 ! (import! &self helpers:invertLiterals)
 ! (import! &self helpers:getLiterals)
+;; Name                 oneCcSub
+;; A function to remove an element from the point of application (POA) if it's negated form is 
+;;                      contained in the guard set of a commanding AND node (COM).
+;; Goal:                To remove a constraint which is not needed because it is commanded by 
+                        its negated form.
 
-;; the function below assumes a terminal AND has already been found and the guardset of this node is given as an input
-;; And that the top most node is the immediate parent of the POA
-;; It finds the common elements between inverted COM set and the guardset of the POA and removes those elements from the POA's children list
-        
-(= (partCcSub $comSet $poa $subExpr)
+;; POA:                 Any non-root AND node.
+
+;; Preconditions:       The POA’s guard set contains constraint X and the POA is commanded 
+                        by a terminal AND node COM whose guard set consists of the constraint 
+                        which is the opposite of X.
+;; Action:              Subtract the constraint X from the guard set of the POA.
+
+;; Example              POA --> (AND B C), COM guard set ((NOT B) A) -- a negated literal of the POA is 
+                        found in the COM guard set so the POA is commanded by this set and has to
+                        lose that member, B in this case. After the transformation, the POA is 
+                        now (AND C).
+;; Name                 expressionEquality
+;; A function to compare two expressions and returns True if equal.
+                        Expressions are deemed equal irrespective of the ordering of literal 
+                        children in the expression.
+                        Example --> (AND B A) and (AND A B) are equal expressions.
+                        normal equality comparison, i.e., == would return false in the above case.
+
+
+(= (oneCcSub $comSet $poa $subExpr)
     (let* 
         (
             ($poaGuardSet (getGuardSet $poa))
@@ -21,9 +41,9 @@
                 (collapse (subtraction (superpose $poa) (superpose $commonElements)))
                 $el)))))
 
-;; a function to check equality of two expressions
-;; needed to make sure child ordering doesn't affect equality
+;; test cases
 
-
-;! (expressionEquality (AND A B) (AND B A)) ; True
-! (partCcSub ((NOT B) C) (AND B C) (OR (AND D) (AND B C))) ;(OR (AND D) (AND C))
+! (oneCcSub ((NOT B) C) (AND B C) (OR (AND D) (AND B C))) ;(OR (AND D) (AND C))
+! (oneCcSub ((NOT B) C) (AND B C) (AND (AND D C) (NOT B) A (AND B C))) ;(AND (AND D C) (NOT B) A (AND C))
+! (oneCcSub ((NOT B) C) (AND A C) (AND (AND D C) (NOT B) A (AND B C))) ;(AND (AND D C) (NOT B) A (AND B C)) ;; no reduction because the POA is not in the expression
+! (oneCcSub (A B C) (AND (NOT A) C) (OR (AND (NOT A) C) (OR A B (AND B C)))) ; (OR (AND C) (OR A B (AND B C)))
